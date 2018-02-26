@@ -1,0 +1,77 @@
+---
+title: "DATA 606 PROJECT 01"
+author: "A H M Shahparan"
+date: "2/24/2018"
+output: html_document
+---
+
+###Project description
+The project description can be found on [github.com.](https://github.com/ahmshahparan/DATA607_PROJECT01/blob/master/Project%20Description.pdf "github")
+
+###Environment setup
+```{r}
+#Loading packages
+library(stringr)
+library(knitr)
+library(dplyr)
+library(readr)
+```
+
+###Importing data
+```{r}
+#Reading the dataset from github
+chessText <- read.csv(paste0("https://raw.githubusercontent.com/ahmshahparan/DATA607_PROJECT01/master/tournamentinfo.txt"))
+head(chessText)
+```
+
+###Cleaning data
+```{r}
+#Removing the column header
+cleanData <-chessText[-c(1:2),]
+```
+```{r}
+#Subsetting player info
+name<-cleanData[seq(2, length(cleanData), 3)]
+head(name,3)
+```
+```{r}
+#Subsetting rating info
+rating<-cleanData[seq(3, length(cleanData), 3)]
+head(rating,3)
+```
+
+###Relevant data extraction
+```{r}
+#Applying data transformation
+playerId <- c(1:64)
+playerName <- str_trim(str_extract(name, "(\\w+\\s){2,3}"))
+totalPoint <- as.numeric(str_extract(name, "\\d.\\d"))
+preRating <- as.integer(str_extract(str_extract(rating, "\\D\\d{3,4}\\D"), "\\d+")) 
+playerState <- str_extract(rating, "\\w\\w")
+opponentId <- str_extract_all(str_extract_all(name, "\\d+\\|"), "\\d+")
+```
+
+###Average of pre-tournament opponents' ratings
+```{r}
+#For loop to find the average of every player's oppoent players' pre chess ratings
+oppoPreRatingAvg <- length(name)
+for (i in 1:length(name)) 
+{ 
+  oppoPreRatingAvg[i] <- round(mean(preRating[as.numeric(unlist(opponentId[playerId[i]]))]), digits = 0)
+}
+```
+
+###Constructing dataset
+```{r}
+df <- data_frame(playerName, playerState, totalPoint, preRating, oppoPreRatingAvg)
+colnames(df) <-  c("Player's Name", "Player's State", "Total Number of Points", "Player's Pre-Rating", "Opponents' Average Ratings")
+kable(head(df))
+```
+
+###Exporting to .csv
+```{r}
+#Exporting in working directory
+write.table(df, file = "tournamentInfo_cleaned.csv",row.names=FALSE, na="",col.names=TRUE, sep=",")
+```
+A copy of this cleaned up .csv file is available at [github.com.](https://github.com/ahmshahparan/DATA607_PROJECT01/blob/master/tournamentInfo_cleaned.csv "github")
+
